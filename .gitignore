@@ -1,0 +1,11 @@
+**/__pycache__/
+test_data/
+GEI/casia_data
+GEI/data/
+GEI/gender_model/
+GEI/models/
+single_frame/data/
+single_frame/models/
+single_frame/single_frame
+*.png
+
