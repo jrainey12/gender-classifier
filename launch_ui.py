@@ -107,7 +107,7 @@ def classify(input_type):
 
     elif input_type == "Single Frame":
 
-        prediction = predict(image, "single_frame/gender_model_10_epochs")
+        prediction = predict(image, "single_frame/models/gender_model_10_epochs")
     else:
         print("Input Type not implemented yet.")
         prediction = ["None", 0]
