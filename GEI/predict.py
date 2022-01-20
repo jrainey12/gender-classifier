@@ -50,7 +50,7 @@ def main(image_file, model):
 
 if __name__ == '__main__':
     
-    parser = argparse.ArgumentParser(description='Train or test gender classifier.')
+    parser = argparse.ArgumentParser(description='Make predictions on gender classifier.')
      
     parser.add_argument(
         'image',

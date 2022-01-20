@@ -1,6 +1,6 @@
 # gender classifier
 
-A CNN for classifying gender using gait.
+A CNN for classifying gender from gait, using TensorFlow.
 
 The main focus is to look at gait representations of various lengths and determine the lowest amount of data necessary to use gait as a feature.
 The representations being analysed are GEI, sub-GEI, Local frame average, Key frames and single frame.
@@ -11,9 +11,8 @@ When all representations have been tested the best performing will be trained on
 ## Progress
 
 Classifiers have been trained for the following representations:
-
-GEI.
-Single frame.
+-GEI.
+-Single frame.
 
 A basic UI has been developed to test individual frames on each model.
 

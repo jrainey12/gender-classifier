@@ -91,9 +91,9 @@ class Window(QMainWindow):
 
     def selectionchange(self,i):
 
-      self.input_type = self.cb.currentText()
-
-      print ("Current index",i,"selection changed ",self.cb.currentText())
+        self.input_type = self.cb.currentText()
+        
+        print ("Current index",i,"selection changed ",self.cb.currentText())
 
 
 
@@ -107,7 +107,8 @@ def classify(input_type):
 
     elif input_type == "Single Frame":
 
-        prediction = predict(image, "single_frame/models/gender_model_10_epochs")
+        prediction = predict(image, "single_frame/gender_model")
+    
     else:
         print("Input Type not implemented yet.")
         prediction = ["None", 0]
