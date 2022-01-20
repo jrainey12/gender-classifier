@@ -8,10 +8,34 @@ The representations being analysed are GEI, sub-GEI, Local frame average, Key fr
 Determining gender is not the main focus, just an easier/quicker gait-based classification problem for training and testing on.
 When all representations have been tested the best performing will be trained on a full gait recognition dataset.
 
+## Installation
+
+Install Ananconda
+
+To install the env:
+```
+conda env create -f environment.yml
+```
+
+
+To activate the env: 
+```
+conda activate gender-classifier
+```
+
+## Testing
+
+Use the following to launch the testing UI:
+```
+python launch_ui.py
+```
+
 ## Progress
 
 Classifiers have been trained for the following representations:
+
 -GEI.
+
 -Single frame.
 
 A basic UI has been developed to test individual frames on each model.

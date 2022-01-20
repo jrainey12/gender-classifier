@@ -1,8 +1,7 @@
 **/__pycache__/
-test_data/
+test_data/GEI/
 GEI/casia_data
 GEI/data/
-GEI/gender_model/
 GEI/models/
 single_frame/data/
 single_frame/models/
