@@ -39,7 +39,7 @@ def sample(in_dir, no_samples, out_dir):
             
             frames = glob(join(ang_choice, "*.png"))
 	 
-            #print (frames)
+            print (frames)
             #break
             
             sample = choice(frames)

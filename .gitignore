@@ -7,4 +7,7 @@ single_frame/data/
 single_frame/models/
 single_frame/single_frame
 *.png
-
+*.o
+*.so
+*.so.*
+utils/build/

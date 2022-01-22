@@ -17,7 +17,6 @@ To install the env:
 conda env create -f environment.yml
 ```
 
-
 To activate the env: 
 ```
 conda activate gender-classifier
@@ -28,6 +27,18 @@ conda activate gender-classifier
 Use the following to launch the testing UI:
 ```
 python launch_ui.py
+```
+
+### To align silhouettes
+Setup cython utils:
+```
+cd single_frame/utils
+
+python setup.py build_ext --inplace
+
+cd ../
+
+python align.py $SILHOUETTE_DIRECTORY
 ```
 
 ## Progress
