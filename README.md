@@ -32,11 +32,9 @@ python launch_ui.py
 ### To align silhouettes
 Setup cython utils:
 ```
-cd single_frame/utils
+cd utils
 
 python setup.py build_ext --inplace
-
-cd ../
 
 python align.py $SILHOUETTE_DIRECTORY
 ```
