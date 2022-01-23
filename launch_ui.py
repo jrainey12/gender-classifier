@@ -20,7 +20,7 @@ class Window(QMainWindow):
 
         #select type
         self.cb = QComboBox(self)
-        self.cb.addItems(["GEI", "Single Frame", "Sub GEIs", "Local Frame Average", "Key Frames"])
+        self.cb.addItems(["GEI", "Single Frame"])#, "Sub GEIs", "Local Frame Average", "Key Frames"])
         self.cb.setFixedSize(170,50)
         self.cb.move(707, 400)
         self.cb.currentIndexChanged.connect(self.selectionchange)

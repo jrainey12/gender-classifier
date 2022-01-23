@@ -1,4 +1,4 @@
-name: gender_classifier
+name: tf_gpu
 channels:
   - conda-forge
   - defaults
@@ -139,4 +139,8 @@ dependencies:
   - zipp=3.7.0=pyhd3eb1b0_0
   - zlib=1.2.11=h7f8727e_4
   - zstd=1.4.9=ha95c52a_0
+  - pip:
+    - cython==0.29.26
+    - imutils==0.5.4
+    - opencv-python==4.5.5.62
 prefix: /home/james/.conda/envs/tf_gpu

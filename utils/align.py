@@ -6,7 +6,8 @@ from os.path import join, basename, exists
 import os
 import cython
 #from get_bounds import get_bounds
-from utils.get_bounds import bounds
+from bounds.get_bounds import bounds
+
 def main(base_dir):
     """
     Iterate through the silhouette frames align the silhouette with the centre of the frame.
