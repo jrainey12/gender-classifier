@@ -26,9 +26,9 @@ def main(mode, model_name, learning_rate, batch_size, epochs):
 def train(model_name,learning_rate,batch_size,epochs):
 
 
-    train_ds = tf.keras.preprocessing.image_dataset_from_directory("single_frame_data/sampled/train", labels='inferred', label_mode='binary', class_names=['male','female'], color_mode='grayscale', batch_size=batch_size, image_size=(126,126))
+    train_ds = tf.keras.preprocessing.image_dataset_from_directory("keyframe_data/sampled/train", labels='inferred', label_mode='binary', class_names=['male','female'], color_mode='grayscale', batch_size=batch_size, image_size=(126,126))
 
-    val_ds = tf.keras.preprocessing.image_dataset_from_directory("single_frame_data/sampled/val", labels='inferred', label_mode='binary', class_names=['male','female'], color_mode='grayscale', batch_size=batch_size, image_size=(126,126))
+    val_ds = tf.keras.preprocessing.image_dataset_from_directory("keyframe_data/sampled/val", labels='inferred', label_mode='binary', class_names=['male','female'], color_mode='grayscale', batch_size=batch_size, image_size=(126,126))
     
     AUTOTUNE = tf.data.experimental.AUTOTUNE
     #train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)#.shuffle(1000).prefetch(buffer_size=AUTOTUNE)
@@ -87,7 +87,7 @@ def train(model_name,learning_rate,batch_size,epochs):
 
 def test(model,batch_size):
  
-    test_ds = tf.keras.preprocessing.image_dataset_from_directory("single_frame_data/sampled/test", labels='inferred', label_mode='binary', class_names=['male','female'], color_mode='grayscale', batch_size=batch_size, image_size=(126,126))
+    test_ds = tf.keras.preprocessing.image_dataset_from_directory("keyframe_data/sampled/test", labels='inferred', label_mode='binary', class_names=['male','female'], color_mode='grayscale', batch_size=batch_size, image_size=(126,126))
 
     AUTOTUNE = tf.data.experimental.AUTOTUNE
 
