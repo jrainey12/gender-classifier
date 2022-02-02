@@ -1,9 +1,9 @@
 import argparse
 import os
 from pathlib import Path
+import cv2
 
-
-def main(base_dir, out_dir):
+def main(base_dir):
 
     """
     Find the keyframes from a sequence of aligned gait silhouettes.
@@ -21,7 +21,7 @@ def main(base_dir, out_dir):
     lowest_dirs = []
     
     #get all folders containing sil sequences 
-    for root,dirs,files in os.walk(in_dir):
+    for root,dirs,files in os.walk(indir):
         if files and not dirs:
             lowest_dirs.append(root)
 
@@ -49,9 +49,10 @@ def find_keyframes(sil_dir):
         stride_widths.append(get_stride_width(sil))
         
 
+    print(stride_widths)
    #find min and max strides 
-    minima = find_minima(stride_widths)
-    maxima = find_maxima(stride_widths)
+    #minima = find_minima(stride_widths)
+    #maxima = find_maxima(stride_widths)
 
 
 def find_minima(stride_widths):
@@ -86,13 +87,40 @@ def get_stride_width(frame):
         frame - path of the frame to use.
     """
 
-    #TODO: Complete the implementation of get_stride_width.
-
-    img = cv2.imread(frame)
-
-    width = img.shape[1]   
-
+    img = cv2.imread(str(frame),0)
+    height, width = img.shape
     
+    #Slightly above bottom to cover all angles 
+    bot = height - 5
+    left = None
+    right = None
+
+
+    #print ("Height: ", height)
+    #print ("Width: ", width)
+    #print ("Bottom: ", bot)
+
+    #Find leftmost white pixel
+    for p in range(0,width-1):
+        if left == None:
+            if img.item(bot,p) == 255:
+                left = p
+                print ("Left: ", left)
+                break
+
+    #find rightmost white pixel
+    for p in range(width-1,0,-1):
+        if right == None:
+            if img.item(bot,p) == 255:
+                right = p
+                print ("Right: ", right)
+                break
+    
+    #calc width of stride    
+    stride_width = right - left
+
+    return stride_width
+
 
 if __name__ == '__main__':
     
