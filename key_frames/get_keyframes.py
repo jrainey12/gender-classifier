@@ -2,6 +2,8 @@ import argparse
 import os
 from pathlib import Path
 import cv2
+from shutil import copyfile
+import numpy as np
 
 def main(base_dir):
 
@@ -33,65 +35,165 @@ def find_keyframes(sil_dir):
     """
     Find the keyframes using the stride lengths in each frame.
     
-    Args;
+    Args:
         sil_dir - Directory containing silhouettes.
+
+    Return:
+        keyframes - list of file paths of key frames.
     """
     
     sil_dir = Path(sil_dir)
     
     sils = sorted(list(sil_dir.glob("*")))
     
-
     #get all stride widths
     stride_widths = []
 
     for sil in sils:
         stride_widths.append(get_stride_width(sil))
         
-
     print(stride_widths)
    #find min and max strides 
-    #minima = find_minima(stride_widths)
+    minmax = find_minima(stride_widths,0)
     #maxima = find_maxima(stride_widths)
 
+    print(minmax)
 
-def find_minima(stride_widths):
-    """
-    Find minima in a sequence.
+    keyframes = sorted([str(sils[i]) for i in minmax])
+
+    print(keyframes)
+    out_dir = os.path.dirname(keyframes[0]) + "/keyframes/" 
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+
+    for i, kf in enumerate(keyframes):
+        print(kf)
+        outname = out_dir + str("%03d.png" % (i + 1))
+        print(outname)
+        copyfile(kf,outname)
     
+
+    min_only = keyframes[::2]
+    max_only = keyframes[1::2]
+    print("MIN: ", min_only)
+    print("MAX: ", max_only)
+
+    #make min mean
+    kf_min_imgs = []
+    for kf in min_only:
+        kf_min_imgs.append(cv2.imread(kf,0))
+    avgkfmin = np.mean(kf_min_imgs,axis=0)
+    outname = out_dir + "min_mean_keyframe.png"
+    print(outname)
+    cv2.imwrite(outname,avgkfmin)
+
+    #make min mean
+    kf_max_imgs = []
+    for kf in max_only:
+        kf_max_imgs.append(cv2.imread(kf,0))
+    avgkfmax = np.mean(kf_max_imgs,axis=0)
+    outname = out_dir + "max_mean_keyframe.png"
+    print(outname)
+    cv2.imwrite(outname,avgkfmax)
+
+    #make total mean
+    kf_imgs = []
+    for kf in keyframes:
+        kf_imgs.append(cv2.imread(kf,0))
+    avgkf = np.mean(kf_imgs,axis=0)
+    outname = out_dir + "mean_keyframe.png"
+    print(outname)
+    cv2.imwrite(outname,avgkf)
+    
+
+def find_minima(stride_widths,idx):
+    """
+    Find minima stride width in a sequence.    
     Args:
         stride_widths - width of stride for each frame.
+        idx - index of previous minima, 0 for first.
+    Return:
+       minima + find_maxima(stride_widths[i;],idx+1) - Return minima and 
+       recursively call find_maxima function. 
     """
    
-    #TODO: Fix this method to correctly find all minimum values.
-    #May need to be a recursive function to work correctly.
     
-    minima = []
-    mn = 1000
-    for i,s in enumerate(stride_widths):
-        
-        if i == 0 and s < mn:
+    print (len(stride_widths))
+    
+    #Basecase - if remaining sequence is less than 5 frames return []. 
+    if len(stride_widths) <= 5:
+        return []
+
+    #Iterate through widths and find minima.
+    mn = 10000
+    for i,s in enumerate(stride_widths):   
+        if s > mn:
+            if i > 0:
+                minima = [idx +(i-1)]
+                mn = 10000
+            else:
+                continue
+        else:
             mn = s
             continue
 
-        elif s >= mn:
-            minima.append([i,s])
-            mn = 10000
+        print ("Min: ", minima[0], stride_widths[i-1])
+
+        try:
+            return minima + find_maxima(stride_widths[i:],idx+i)
+        except:
+            return minima
+
+def find_maxima(stride_widths,idx):
+    """
+    Find maxima in a sequence.
+    Args:
+        stride_widths - width of stride for each frame.
+    Return:
+       maxima + find_minima(stride_widths[i;],idx+1) - Return maxima and 
+       recursively call find_minima function. 
+   """
     
+    print (len(stride_widths))
+
+    #Basecase -  if remaining sequence is less than 5 frames return [].    
+    if len(stride_widths) <= 5:
+        return []
+
+    #Iterate through widths and find maxima.
+    mx = 0
+    for i,s in enumerate(stride_widths):
+        if s < mx:
+            if i > 0:
+                maxima = [idx+(i-1)]#,stride_widths[i-1]]
+                mx = 0
+            else:
+                continue
+        else:
+            mx = s
+            continue
+        
+        print ("Max: ",  maxima, stride_widths[i-1])
+
+        try:
+            return maxima + find_minima(stride_widths[i:],idx+i)
+        except:
+            return maxima
 
 def get_stride_width(frame):
     """
     Find the stride width in pixels.
-
     Args:
         frame - path of the frame to use.
+    Return:
+        stride_width - width of stride in pixels.
     """
 
     img = cv2.imread(str(frame),0)
     height, width = img.shape
     
     #Slightly above bottom to cover all angles 
-    bot = height - 5
+    bot = height - 30
     left = None
     right = None
 

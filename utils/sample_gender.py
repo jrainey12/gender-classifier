@@ -45,6 +45,8 @@ def sample(in_dir, no_samples, out_dir):
     # This would prevent having to move files.
     # Possibly after getting sils I could remove any containing selected strings.
 
+    #TODO: Fix Path based approach, currently uses both Path and os, should use 
+    # either one or the other.
 
     #Set seed to sample size to ensure data is consistent when
     # same size dataset is sampled on a set of data.
