@@ -26,10 +26,17 @@ def main(base_dir):
     for root,dirs,files in os.walk(indir):
         if files and not dirs:
             lowest_dirs.append(root)
-
+    
+    lowest_dirs.sort()
+    
+    #delete last record, zips folder.
+    del lowest_dirs[-1]
     for d in lowest_dirs:
-        find_keyframes(d) 
-
+        print("Directory: ", d)
+        try:
+            find_keyframes(d) 
+        except:
+            print("No frames!")
 
 def find_keyframes(sil_dir):
     """
@@ -50,33 +57,35 @@ def find_keyframes(sil_dir):
     stride_widths = []
 
     for sil in sils:
-        stride_widths.append(get_stride_width(sil))
-        
-    print(stride_widths)
+        try:
+            stride_widths.append(get_stride_width(sil))
+        except:
+            continue
+    #print(stride_widths)
    #find min and max strides 
     minmax = find_minima(stride_widths,0)
     #maxima = find_maxima(stride_widths)
 
-    print(minmax)
+    #print(minmax)
 
     keyframes = sorted([str(sils[i]) for i in minmax])
 
-    print(keyframes)
+    #print(keyframes)
     out_dir = os.path.dirname(keyframes[0]) + "/keyframes/" 
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
 
     for i, kf in enumerate(keyframes):
-        print(kf)
+        #print(kf)
         outname = out_dir + str("%03d.png" % (i + 1))
-        print(outname)
+        #print(outname)
         copyfile(kf,outname)
     
 
     min_only = keyframes[::2]
     max_only = keyframes[1::2]
-    print("MIN: ", min_only)
-    print("MAX: ", max_only)
+    #print("MIN: ", min_only)
+    #print("MAX: ", max_only)
 
     #make min mean
     kf_min_imgs = []
@@ -84,7 +93,7 @@ def find_keyframes(sil_dir):
         kf_min_imgs.append(cv2.imread(kf,0))
     avgkfmin = np.mean(kf_min_imgs,axis=0)
     outname = out_dir + "min_mean_keyframe.png"
-    print(outname)
+    #print(outname)
     cv2.imwrite(outname,avgkfmin)
 
     #make min mean
@@ -93,7 +102,7 @@ def find_keyframes(sil_dir):
         kf_max_imgs.append(cv2.imread(kf,0))
     avgkfmax = np.mean(kf_max_imgs,axis=0)
     outname = out_dir + "max_mean_keyframe.png"
-    print(outname)
+    #print(outname)
     cv2.imwrite(outname,avgkfmax)
 
     #make total mean
@@ -102,7 +111,7 @@ def find_keyframes(sil_dir):
         kf_imgs.append(cv2.imread(kf,0))
     avgkf = np.mean(kf_imgs,axis=0)
     outname = out_dir + "mean_keyframe.png"
-    print(outname)
+    #print(outname)
     cv2.imwrite(outname,avgkf)
     
 
@@ -118,7 +127,7 @@ def find_minima(stride_widths,idx):
     """
    
     
-    print (len(stride_widths))
+    #print (len(stride_widths))
     
     #Basecase - if remaining sequence is less than 5 frames return []. 
     if len(stride_widths) <= 5:
@@ -137,7 +146,7 @@ def find_minima(stride_widths,idx):
             mn = s
             continue
 
-        print ("Min: ", minima[0], stride_widths[i-1])
+ #       print ("Min: ", minima[0], stride_widths[i-1])
 
         try:
             return minima + find_maxima(stride_widths[i:],idx+i)
@@ -154,7 +163,7 @@ def find_maxima(stride_widths,idx):
        recursively call find_minima function. 
    """
     
-    print (len(stride_widths))
+    #print (len(stride_widths))
 
     #Basecase -  if remaining sequence is less than 5 frames return [].    
     if len(stride_widths) <= 5:
@@ -173,7 +182,7 @@ def find_maxima(stride_widths,idx):
             mx = s
             continue
         
-        print ("Max: ",  maxima, stride_widths[i-1])
+  #      print ("Max: ",  maxima, stride_widths[i-1])
 
         try:
             return maxima + find_minima(stride_widths[i:],idx+i)
@@ -207,7 +216,7 @@ def get_stride_width(frame):
         if left == None:
             if img.item(bot,p) == 255:
                 left = p
-                print ("Left: ", left)
+    #            print ("Left: ", left)
                 break
 
     #find rightmost white pixel
@@ -215,7 +224,7 @@ def get_stride_width(frame):
         if right == None:
             if img.item(bot,p) == 255:
                 right = p
-                print ("Right: ", right)
+   #             print ("Right: ", right)
                 break
     
     #calc width of stride    
