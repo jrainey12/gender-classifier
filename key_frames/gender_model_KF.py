@@ -1,18 +1,34 @@
 import tensorflow as tf
-from tensorflow import keras
+from tensorflow.keras import layers
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 from numpy.random import seed
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import os
 
 seed(42)# keras seed fixing
 tf.random.set_seed(42)# tensorflow seed fixing
 
 def main(mode, model_name, learning_rate, batch_size, epochs):
-
+    """
+    Train or test CNN for use with keyframes.
+    Args:
+        mode(train,test) - mode to run in.
+        model_name(str) - Name for model to be saved or loaded for testing.
+        learning_rate(float) - Starting learning rate.
+        batch_size(int) - Size of batches.
+        epochs(int) - Number of epochs to train for.
+    """
     print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
     print("CUDA?: ", tf.test.is_built_with_cuda())
+
+
+    #Make directory for new model. 
+    if not os.path.exists(model_name):
+        os.mkdir(model_name)
+
 
     if mode == "train":
         train(model_name,learning_rate,batch_size,epochs)
@@ -23,97 +39,149 @@ def main(mode, model_name, learning_rate, batch_size, epochs):
     else:
         print("Invalid mode selected.")
 
+
 def train(model_name,learning_rate,batch_size,epochs):
+    """
+    Train CNN.
+    Args:
+        model_name(str) - Name for the model to be saved as.
+        learning_rate(float) - Starting learning rate.
+        batch_size(int) - Size of batches to use.
+        epochs(int) - Number of epochs to train for.
+    """
 
 
-    train_ds = tf.keras.preprocessing.image_dataset_from_directory("keyframe_data/sampled/train", labels='inferred', label_mode='binary', class_names=['male','female'], color_mode='grayscale', batch_size=batch_size, image_size=(126,126))
-
-    val_ds = tf.keras.preprocessing.image_dataset_from_directory("keyframe_data/sampled/val", labels='inferred', label_mode='binary', class_names=['male','female'], color_mode='grayscale', batch_size=batch_size, image_size=(126,126))
+    tf.data.AUTOTUNE
     
-    AUTOTUNE = tf.data.experimental.AUTOTUNE
-    #train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)#.shuffle(1000).prefetch(buffer_size=AUTOTUNE)
-    #val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+    #Generate augmented data for training.
+    train_datagen = ImageDataGenerator(rotation_range=10,
+                                width_shift_range=0.05,
+                                height_shift_range=0.05,
+                                shear_range=0.05,
+                                zoom_range=0.05,
+                                rescale=1/255.,
+                                fill_mode='nearest')
+    
+    #Load train data
+    train_ds = train_datagen.flow_from_directory(
+                "key_frame_data/sampled/train",
+                target_size=(224, 224),
+                batch_size=batch_size,
+                color_mode='grayscale',
+                shuffle = True,
+                class_mode='binary')
 
-    #train_ds_size = tf.data.experimental.cardinality(train_ds)*batch_size
-    #val_ds_size = tf.data.experimental.cardinality(val_ds)*batch_size#tf.keras.backend.get_value
+    #Rescale val data.
+    val_datagen = ImageDataGenerator(rescale=1/255.) 
+    
+    #Load val data.
+    val_ds = val_datagen.flow_from_directory(
+                "key_frame_data/sampled/val",
+                target_size=(224, 224),
+                batch_size=batch_size,
+                color_mode='grayscale',
+                shuffle = True,
+                class_mode='binary')
 
-    #print(train_ds_size)
-    #print(val_ds_size)
-
-    train_ds = train_ds.cache()
-    #train_ds = train_ds.shuffle(train_ds_size)
-    train_ds = train_ds.prefetch(buffer_size=AUTOTUNE)
-    val_ds = val_ds.cache()
-    #val_ds = val_ds.shuffle(val_ds_size)
-    val_ds = val_ds.prefetch(buffer_size=AUTOTUNE)
-
-    model = keras.Sequential([
-        keras.layers.experimental.preprocessing.Rescaling(1./255, input_shape=(126,126, 1)),
-        keras.layers.Conv2D(16, 3, activation='relu'),
-        keras.layers.MaxPooling2D(),
-        keras.layers.Conv2D(32, 3, activation='relu'),
-        keras.layers.MaxPooling2D(),
-        keras.layers.Conv2D(64, 3, activation='relu'),
-        keras.layers.MaxPooling2D(),
-        keras.layers.Flatten(),
-        keras.layers.Dense(128,activation='relu'),
-        keras.layers.Dense(2)
+    
+    #Model definition.
+    model = tf.keras.Sequential([
+        layers.Conv2D(16, 3, activation='relu'),
+        layers.MaxPooling2D(),
+        layers.Conv2D(32, 3, activation='relu'),
+        layers.MaxPooling2D(),
+        layers.Conv2D(64, 3, activation='relu'),
+        layers.MaxPooling2D(),
+        layers.Flatten(),
+        layers.Dense(128,activation='relu'),
+        layers.Dense(2)
     ])
   
-    #decay_st = tf.keras.backend.get_value(tf.data.experimental.cardinality(train_ds))*15
+    
+    #LR scheduler to drop LR at set rate or at set iters
+    epoch_iters = len(train_ds)
+    print("LR Start: ", learning_rate)
+    print("Iterations per epoch: ", epoch_iters)
 
-    #print("LR Start: ", learning_rate)
-    #print("LR Decay Steps: ", decay_st)
-
-    #lr_schedule = keras.optimizers.schedules.ExponentialDecay(
+    #lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
     #initial_learning_rate=learning_rate,
-    #decay_steps=decay_st,
+    #decay_steps=epoch_iters*25,
     #decay_rate=0.1,
     #staircase=True) 
-   
-    opt = keras.optimizers.SGD(learning_rate=learning_rate)#lr_schedule)    
+  
+    lr_schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+            boundaries = [epoch_iters*10],#,epoch_iters*40],
+            values = [learning_rate, learning_rate/10])#, learning_rate/100])
+
+
+    #SGD Optimizer
+    opt = tf.keras.optimizers.SGD(learning_rate=learning_rate,momentum=0.9)    
     model.compile(optimizer=opt,
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     metrics=['accuracy'])
+
+    model.build([None,224,224,1])
 
     model.summary()
 
+    #Fit the model
     fit_model = model.fit(train_ds, validation_data=val_ds, epochs=epochs)
     
+    #Visualise the accuracy and loss
     vis_acc_loss(fit_model,model_name,epochs)  
 
+    #Save model
     model.save(model_name)  
 
 
 def test(model,batch_size):
- 
-    test_ds = tf.keras.preprocessing.image_dataset_from_directory("keyframe_data/sampled/test", labels='inferred', label_mode='binary', class_names=['male','female'], color_mode='grayscale', batch_size=batch_size, image_size=(126,126))
+    """
+    Test a previously trained model.
+    Args:
+        model(str) - Name of the model to test.
+        batch_size(str) - Size of batch to use.
+    """
+    #Rescale test data
+    test_datagen = ImageDataGenerator(rescale=1/255.,) 
+    
+    #Load test data
+    test_ds = test_datagen.flow_from_directory(
+                "key_frame_data/sampled/test",
+                target_size=(224, 224),
+                batch_size=batch_size,
+                color_mode='grayscale',
+                shuffle = True,
+                class_mode='binary')
 
-    AUTOTUNE = tf.data.experimental.AUTOTUNE
 
-    test_ds = test_ds.cache().prefetch(buffer_size=AUTOTUNE)
-   
-    opt = keras.optimizers.SGD(learning_rate=0.01)#lr_schedule)
-    model = keras.models.load_model(model)   
+    #SGD optimiser
+    opt = tf.keras.optimizers.SGD(learning_rate=0.01)
+    model = tf.keras.models.load_model(model)   
     model.compile(optimizer=opt,
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     metrics=['accuracy'])
 
+    #Evaluate model
     test_loss, test_acc = model.evaluate(test_ds, verbose=1)
 
     print('\nTest Loss:', test_loss)
     print('\nTest accuracy:', test_acc) 
+ 
+    #Get Predictions on test set.
+    probability_model = tf.keras.Sequential([model, tf.keras.layers.Softmax()])
+    predictions = probability_model.predict(test_ds)
+    print(predictions)
 
-    #probability_model = tf.keras.Sequential([model, tf.keras.layers.Softmax()])
-
-    #predictions = probability_model.predict(test_ds)
-
-    #print(predictions) 
-
-  
 
 def vis_acc_loss(fit_model,model_name,epochs):
-
+    """
+    Visualise the accuracy and loss using matplotlib.
+    (Will be updated to use tensorboard at some point)
+    Args:
+        fit_model - Model that is being visualised.
+        model_name(str) - Name of model.
+        epochs(int) - Number of epochs.
+    """
     acc = fit_model.history['accuracy']
     val_acc = fit_model.history['val_accuracy']
 
@@ -134,7 +202,7 @@ def vis_acc_loss(fit_model,model_name,epochs):
     plt.plot(epochs_range, val_loss, label='Validation Loss')
     plt.legend(loc='upper right')
     plt.title('Training and Validation Loss')
-    #plt.show()
+   
     plt.savefig(model_name + "/acc_loss_graph.png")
 
 

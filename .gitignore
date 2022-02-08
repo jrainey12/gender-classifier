@@ -7,6 +7,7 @@ GEI/models/
 single_frame/models/
 single_frame/single_frame_data
 key_frames/key_frame_data
+key_frames/models/
 *.o
 *.so
 *.so.*
