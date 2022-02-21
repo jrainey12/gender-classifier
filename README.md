@@ -47,5 +47,7 @@ Classifiers have been trained for the following representations:
 
 -Single frame.
 
+-Key frames.
+
 A basic UI has been developed to test individual frames on each model.
 

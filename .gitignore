@@ -2,12 +2,14 @@
 test_data/GEI
 test_data/single_frame_data
 GEI/GEI_data
-GEI/data/
+GEI/runs/
 GEI/models/
 single_frame/models/
 single_frame/single_frame_data
+single_frame/runs/
 key_frames/key_frame_data
 key_frames/models/
+key_frames/runs/
 *.o
 *.so
 *.so.*
