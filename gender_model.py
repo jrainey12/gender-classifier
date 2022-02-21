@@ -28,7 +28,7 @@ class GenderModel():
                 ])
     
 
-    def train(self, lr, bs, epochs, augs,LR_schedule):
+    def train(self, lr, bs, epochs, augs, lr_schedule):
 
         #Augment train data
         train_datagen = ImageDataGenerator(**augs)
@@ -55,8 +55,32 @@ class GenderModel():
                     shuffle=True,
                     class_mode='binary')
 
+       
+        #Learning rate schedule
+        if lr_schedule is not None:
 
-        opt = tf.keras.optimizers.SGD(learning_rate=lr, momentum=0.9)
+            print("LR schedule used.", lr_schedule)
+
+            epoch_iters = len(train_ds)
+            print("Iters per epoch:", epoch_iters)
+
+            lr_schedule = [int(i * epoch_iters) for i in lr_schedule]
+
+            values = []
+            for i in range(len(lr_schedule)+1):
+                values.append(lr)
+                lr = (lr/10)
+
+            learning_rate = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+                    boundaries = lr_schedule,
+                    values = values,
+                    )
+        else:
+            print("LR used.")
+            learning_rate = lr
+
+        #Optimiser
+        opt = tf.keras.optimizers.SGD(learning_rate=learning_rate, momentum=0.9)
         self.model.compile(optimizer=opt,
                         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                         metrics=['accuracy'])

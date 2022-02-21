@@ -28,7 +28,10 @@ def main(input_type, mode, model_name, lr, bs, epochs):
                 #horizontal_flip=True
                 )
         
-        lr_schedule = None
+
+        #learning rate schedule, list of epochs to drop at.(factor of 10 be default)
+        lr_schedule = [60,100]
+
 
     elif input_type == "single":
         
